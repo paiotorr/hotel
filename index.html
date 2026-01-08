@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Rasstall Menu</title>
+
+<style>
+body{font-family:Arial;padding:20px;background:#f8f8f8;}
+h1{text-align:center;}
+#tableInfo{text-align:center;font-weight:bold;margin-bottom:20px;}
+
+.menu{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;}
+
+.item{
+  background:#fff;
+  border:1px solid #ddd;
+  width:170px;
+  padding:12px;
+  text-align:center;
+  border-radius:10px;
+}
+
+.item img{
+  width:100%;
+  height:110px;
+  object-fit:cover;
+  border-radius:8px;
+}
+
+/* 🔵 BIG ADD BUTTON */
+.add-btn{
+  margin-top:10px;
+  width:100%;
+  padding:12px;
+  font-size:18px;
+  background:#3498db;
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+}
+.add-btn:active{transform:scale(0.97);}
+
+#orderBox{
+  margin-top:30px;
+  background:#fff;
+  padding:18px;
+  border-radius:12px;
+}
+
+.order-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin:8px 0;
+  font-size:18px;
+}
+
+.remove-btn{
+  background:#e74c3c;
+  color:#fff;
+  border:none;
+  padding:6px 12px;
+  border-radius:6px;
+  font-size:16px;
+  cursor:pointer;
+}
+
+/* 🟢 BIG SUBMIT BUTTON */
+.submit-btn{
+  margin-top:15px;
+  width:100%;
+  padding:16px;
+  font-size:20px;
+  background:#27ae60;
+  color:#fff;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+}
+.submit-btn:active{transform:scale(0.98);}
+
+#statusBox{
+  margin-top:15px;
+  font-size:20px;
+  text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🍽 Rasstall Menu</h1>
+<p id="tableInfo"></p>
+
+<div class="menu">
+
+<div class="item">
+  <img src="https://raw.githubusercontent.com/paiotorr/Paiotorr/main/image/Pizza.jpg">
+  <h3>Pizza</h3>
+  <p>₹199</p>
+  <button class="add-btn"
+    onclick="addItem('Pizza','https://raw.githubusercontent.com/paiotorr/Paiotorr/main/image/Pizza.jpg')">
+    ➕ Add
+  </button>
+</div>
+
+<div class="item">
+  <img src="https://images.unsplash.com/photo-1550547660-d9450f859349">
+  <h3>Burger</h3>
+  <p>₹99</p>
+  <button class="add-btn"
+    onclick="addItem('Burger','https://images.unsplash.com/photo-1550547660-d9450f859349')">
+    ➕ Add
+  </button>
+</div>
+
+</div>
+
+<div id="orderBox">
+  <h2>Your Order</h2>
+  <div id="orderList"></div>
+  <button class="submit-btn" onclick="submitOrder()">🛎 Submit Order</button>
+  <div id="statusBox"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getFirestore, collection, addDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDSf51jWs3I4AXX0U8M_HxKn4VtRYg72xs",
+  authDomain: "hotel-order-7f1f2.firebaseapp.com",
+  projectId: "hotel-order-7f1f2"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Table number
+const params = new URLSearchParams(location.search);
+const table = params.get("table") || "Unknown";
+tableInfo.innerText = "Table: " + table;
+
+// Order cart
+let order = [];
+let id = 0;
+
+window.addItem = (name, img) => {
+  order.push({ id: id++, name, img });
+  render();
+};
+
+window.removeItem = (rid) => {
+  order = order.filter(o => o.id !== rid);
+  render();
+};
+
+function render(){
+  orderList.innerHTML = "";
+  order.forEach(o => {
+    orderList.innerHTML += `
+      <div class="order-item">
+        <span>${o.name}</span>
+        <button class="remove-btn" onclick="removeItem(${o.id})">✖</button>
+      </div>`;
+  });
+}
+
+window.submitOrder = async () => {
+  if(order.length === 0){
+    alert("No items selected");
+    return;
+  }
+
+  statusBox.innerText = "⏳ Waiting for confirmation...";
+
+  const ref = await addDoc(collection(db,"orders"),{
+    table,
+    items:order,
+    status:"pending",
+    time:new Date().toLocaleString()
+  });
+
+  onSnapshot(doc(db,"orders",ref.id),(snap)=>{
+    if(!snap.exists()) return;
+    const s = snap.data().status;
+    if(s==="accepted"){statusBox.innerText="✅ Order Accepted"; reset();}
+    if(s==="rejected"){statusBox.innerText="❌ Order Rejected"; reset();}
+  });
+
+  order=[];
+  render();
+};
+
+function reset(){
+  setTimeout(()=>{
+    statusBox.innerText="";
+    order=[];
+    render();
+  },2000);
+}
+</script>
+
+</body>
+</html>
