@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<head>-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1280, initial-scale=0.3, maximum-scale=1.0, user-scalable=no">
-<title>PAIOTORR - Us Pizza</title>
+<title>PAIOTORR - U S Pizza</title>
 
 <style>
 /* --- BASE STYLES --- */
@@ -169,7 +169,7 @@ h1 { text-align: center; font-size: 48px; margin-top: 30px; }
 
 <body>
 
-<h1>PAIOTORR - Us Pizza</h1>
+<h1>PAIOTORR - U S Pizza</h1>
 <p id="tableInfo"></p>
 
 <div id="mainMenuContainer"></div>
@@ -205,6 +205,11 @@ const app=initializeApp({
  projectId:"hotel-order-7f1f2"
 });
 const db=getFirestore(app);
+
+// 🔑 Restaurant ID (ITEM PAGE)
+const restaurantId = "uspizza";
+
+
 
 const table=new URLSearchParams(location.search).get("table")||"1";
 tableInfo.innerText="Table: "+table;
@@ -349,9 +354,17 @@ window.submitOrder = async(btnElement) => {
   const nameInput = document.getElementById("customerName");
   if(!nameInput.value || !Object.keys(order).length) return alert("Enter name and add items!");
   
-  const ref = await addDoc(collection(db, "orders"), {
-    table, customer: nameInput.value, items: Object.values(order), total, status: "pending", submittedAt: Date.now()
-  });
+await addDoc(
+  collection(db, "restaurants", restaurantId, "orders"),
+  {
+    table,
+    customer: nameInput.value,
+    items: Object.values(order),
+    total,
+    status: "pending",
+    submittedAt: Date.now()
+  }
+);
   
   localStorage.setItem(ORDER_KEY, ref.id);
   localStorage.removeItem(DISMISSED_KEY);
