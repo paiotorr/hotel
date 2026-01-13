@@ -120,6 +120,7 @@ h1 { text-align: center; font-size: 48px; margin-top: 30px; }
 .cat-drinks { background: #2980b9 !important; }
 .cat-starters { background: #f39c12 !important; }
 .cat-desserts { background: #9b59b6 !important; }
+.cat-chips { background: hsl(313, 100%, 48%) !important; }
 
 /* --- VISUAL CLICK WITH BLACK STROKE --- */
 .visual-click {
@@ -221,6 +222,7 @@ const menuData = [
   { name: "Cold Coffee", price: 90, category: "Drinks", img: "https://images.unsplash.com/photo-1541167760496-1628856ab772?w=400" },
   { name: "Gulab Jamun", price: 60, category: "Desserts", img: "https://images.unsplash.com/photo-1589119908995-c6837fa14848?w=400" },
   { name: "Spring Rolls", price: 120, category: "Starters", img: "https://images.unsplash.com/photo-1544025162-d76694265947?w=400" }
+   { name: "Uncle Chips", price: 10, category: "Chips", img: "https://images.unsplash.com/photo-1544025162-d76694265947?w=400" }
 ];
 
 const POPUP_KEY=`popup_${table}`, ORDER_KEY=`order_${table}`, DISMISSED_KEY=`popup_dismissed_${table}`, EXPIRY_PREFIX=`expired_`;
@@ -354,7 +356,7 @@ window.submitOrder = async(btnElement) => {
   const nameInput = document.getElementById("customerName");
   if(!nameInput.value || !Object.keys(order).length) return alert("Enter name and add items!");
   
-await addDoc(
+const ref = await addDoc(
   collection(db, "restaurants", restaurantId, "orders"),
   {
     table,
@@ -365,18 +367,22 @@ await addDoc(
     submittedAt: Date.now()
   }
 );
-  
-  localStorage.setItem(ORDER_KEY, ref.id);
+
+localStorage.setItem(ORDER_KEY, ref.id);
+listen(ref.id);
   localStorage.removeItem(DISMISSED_KEY);
   savePopup("submitted", nameInput.value, total);
-  listen(ref.id);
+showPopup();          // 🔥 FORCE SHOW
+
   order = {}; render(); nameInput.value = "";
 };
 
 function listen(id) {
   if(localStorage.getItem(EXPIRY_PREFIX + id)) return;
 
-  onSnapshot(doc(db, "orders", id), async s => {
+  onSnapshot(
+  doc(db, "restaurants", restaurantId, "orders", id),
+  async s => {
     if(!s.exists()) return;
     const d = s.data();
 
@@ -423,7 +429,7 @@ function showPopup() {
   const data = localStorage.getItem(POPUP_KEY);
   const orderId = localStorage.getItem(ORDER_KEY);
 
-  if(!data || localStorage.getItem(DISMISSED_KEY) === "true") return;
+  if(!data) return;
   if(orderId && localStorage.getItem(EXPIRY_PREFIX + orderId)) return;
 
   const p = JSON.parse(data);
