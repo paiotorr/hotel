@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1280, initial-scale=0.3, maximum-scale=0.3, minimum-scale=0.3, user-scalable=no">
+
+<meta name="copyright" content="© 2026 Paiotorr">
+<meta name="author" content="Paiotorr">
+
 <title>PAIOTORR - Gramyanubhuti</title>
 
 <style>
@@ -18,14 +22,37 @@ html, body {
   overflow-x: hidden;
   /* DISABLE DOUBLE-TAP ZOOM */
   touch-action: manipulation; 
+  /* DISABLE TEXT SELECTION GLOBALLY */
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 h1 { text-align: center; font-size: 90px; margin-top: 90px; }
 #tableInfo { text-align: center; font-weight: bold; font-size: 60px; color: #555; }
 
+/* FIX: Removed huge padding here so footer isn't pushed into void */
 #mainMenuContainer {
-  padding-bottom: 1500px; 
+  padding-bottom: 50px; 
 }
+
+/* --- COPYRIGHT FOOTER --- */
+#copyrightFooter {
+  display: block;
+  text-align: center;
+  font-size: 40px;
+  color: #888;
+  background: #f8f8f8;
+  font-weight: bold;
+  
+  margin-top: 50px;
+  
+  /* INCREASE THIS VALUE FOR MORE BLANK SPACE */
+  /* 1000px provides a massive amount of empty space at the bottom */
+  padding-bottom: 1000px; 
+  
+  width: 100%;
+}
+
 
 /* --- CATEGORY HEADERS --- */
 .category-header {
@@ -66,7 +93,12 @@ h1 { text-align: center; font-size: 90px; margin-top: 90px; }
   box-shadow: 0 4px 15px rgba(0,0,0,0.05);
   flex: 0 0 500px;
 }
-.item img { width: 100%; height: 300px; object-fit: cover; border-radius: 16px; }
+/* IMAGE PROTECTION */
+.item img { 
+  width: 100%; height: 300px; object-fit: cover; border-radius: 16px; 
+  pointer-events: none; /* Disables drag/right-click on images specifically */
+  -webkit-user-drag: none;
+}
 .item h3 { font-size: 52px; margin: 15px 0; }
 .item p { font-size: 48px; color: #27ae60; font-weight: bold; margin-bottom: 20px; }
 
@@ -149,6 +181,9 @@ h1 { text-align: center; font-size: 90px; margin-top: 90px; }
   width: 100%; padding: 22px; font-size: 30px; font-weight: 900;
   margin-bottom: 20px; border: 3px solid #ddd; border-radius: 15px;
   box-sizing: border-box;
+  /* Allow text selection ONLY in input fields */
+  user-select: text; 
+  -webkit-user-select: text;
 }
 
 #orderList {
@@ -190,6 +225,10 @@ h1 { text-align: center; font-size: 90px; margin-top: 90px; }
 
 <div id="mainMenuContainer"></div>
 
+<div id="copyrightFooter">
+  © 2026 Paiotorr. All Rights Reserved.
+</div>
+
 <div id="orderBox">
   <div id="orderInner">
     <div id="categoryNavigationBox">
@@ -215,6 +254,21 @@ h1 { text-align: center; font-size: 90px; margin-top: 90px; }
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
 import {getFirestore,collection,addDoc,doc,onSnapshot,updateDoc} from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
+// --- SECURITY & COPYRIGHT PROTECTION ---
+document.addEventListener("contextmenu", (e) => e.preventDefault());
+
+document.addEventListener("keydown", (e) => {
+  if (e.ctrlKey && (e.key === "u" || e.key === "U" || e.key === "s" || e.key === "S" || e.key === "c" || e.key === "C")) {
+    e.preventDefault();
+  }
+});
+
+document.addEventListener("dragstart", (e) => {
+  if (e.target.tagName === "IMG") {
+    e.preventDefault();
+  }
+});
+
 const app=initializeApp({
  apiKey:"AIzaSyDSf51jWs3I4AXX0U8M_HxKn4VtRYg72xs",
  authDomain:"hotel-order-7f1f2.firebaseapp.com",
@@ -232,7 +286,10 @@ const menuData = [
   { name: "Chicken Curry", price: 280, category: "Non-Veg", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400" },
   { name: "Cold Coffee", price: 90, category: "Drinks", img: "https://images.unsplash.com/photo-1541167760496-1628856ab772?w=400" },
   { name: "Gulab Jamun", price: 60, category: "Desserts", img: "https://images.unsplash.com/photo-1589119908995-c6837fa14848?w=400" },
-  { name: "Spring Rolls", price: 120, category: "Starters", img: "https://images.unsplash.com/photo-1544025162-d76694265947?w=400" }
+  { name: "Spring Rolls", price: 120, category: "Starters", img: "https://images.unsplash.com/photo-1544025162-d76694265947?w=400" },
+  { name: "Spring Rolls", price: 120, category: "Desserts", img: "https://images.unsplash.com/photo-1544025162-d76694265947?w=400" },
+   { name: "Spring Rolls", price: 120, category: "Desserts", img: "https://images.unsplash.com/photo-1544025162-d76694265947?w=400" },
+    { name: "Spring Rolls", price: 120, category: "Desserts", img: "https://images.unsplash.com/photo-1544025162-d76694265947?w=400" }
 ];
 
 const POPUP_KEY=`popup_${table}`, ORDER_KEY=`order_${table}`;
@@ -241,7 +298,6 @@ let order={}, total=0;
 const TIME_SUBMITTED = 8 * 60 * 1000; 
 const TIME_RESULT = 5 * 60 * 1000;    
 
-// --- TOUCH PROTECTION ---
 const orderBox = document.getElementById("orderBox");
 const orderList = document.getElementById("orderList");
 const catBar = document.getElementById("catBar");
@@ -251,7 +307,6 @@ orderBox.addEventListener('touchmove', (e) => {
     if (!isScrollable) e.preventDefault(); 
 }, { passive: false });
 
-// --- VISUAL CLICK LOGIC ---
 window.triggerVisual = (element) => {
   if(!element) return;
   element.classList.remove('visual-click');
@@ -260,7 +315,6 @@ window.triggerVisual = (element) => {
   setTimeout(() => element.classList.remove('visual-click'), 200); 
 }
 
-// --- INFINITE SCROLL ---
 let autoScroll = true;
 let scrollDir = 1; 
 const SCROLL_SPEED = 2; 
@@ -344,7 +398,6 @@ function render() {
   document.getElementById("totalPrice").innerText = total ? "Total: ₹" + total : "";
 }
 
-// --- ORDERING LOGIC ---
 window.submitOrder = async(btnElement) => {
   triggerVisual(btnElement);
   const nameInput = document.getElementById("customerName");
