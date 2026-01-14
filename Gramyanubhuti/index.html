@@ -233,7 +233,7 @@ const menuData = [
   { name: "Spring Rolls", price: 120, category: "Starters", img: "https://images.unsplash.com/photo-1544025162-d76694265947?w=400" }
 ];
 
-const POPUP_KEY=`popup_${table}`, ORDER_KEY=`order_${table}`, DISMISSED_KEY=`popup_dismissed_${table}`, EXPIRY_PREFIX=`expired_`;
+const POPUP_KEY=`popup_${table}`, ORDER_KEY=`order_${table}`, DISMISSED_KEY=`popup_dismissed_${table}`;
 let order={}, total=0;
 
 const TIME_SUBMITTED = 8 * 60 * 1000; 
@@ -358,7 +358,7 @@ window.submitOrder = async(btnElement) => {
   });
 
   localStorage.setItem(ORDER_KEY, ref.id);
-  localStorage.removeItem(DISMISSED_KEY); // New order, reset dismissal
+  localStorage.removeItem(DISMISSED_KEY); // Brand new order, clear all previous dismissals
   savePopup("submitted", nameInput.value, total);
   listen(ref.id);
   order = {}; render(); nameInput.value = "";
@@ -368,10 +368,12 @@ function listen(id) {
   onSnapshot(doc(db, "restaurants", restaurantId, "orders", id), s => {
     if(!s.exists()) return;
     const d = s.data();
-    if(d.status === "accepted" || d.status === "rejected") {
-      const currentData = JSON.parse(localStorage.getItem(POPUP_KEY) || "{}");
-      if (currentData.status !== d.status) {
-        localStorage.removeItem(DISMISSED_KEY); // Reset dismissal on status change
+    const currentData = JSON.parse(localStorage.getItem(POPUP_KEY) || "{}");
+    const dismissedStatus = localStorage.getItem(DISMISSED_KEY);
+
+    // FIX: Only trigger a popup change if the status is NEW and not the one already dismissed
+    if (d.status !== currentData.status && d.status !== dismissedStatus) {
+      if (d.status === "accepted" || d.status === "rejected") {
         savePopup(d.status, d.customer, d.total);
       }
     }
@@ -399,12 +401,15 @@ setInterval(checkPopupTimer, 1000);
 
 function showPopup() {
   const data = localStorage.getItem(POPUP_KEY);
-  const isDismissed = localStorage.getItem(DISMISSED_KEY);
+  const dismissedStatus = localStorage.getItem(DISMISSED_KEY);
 
-  // FIX: Don't show if user dismissed it already
-  if(!data || isDismissed === "true") return;
+  if(!data) return;
 
   const p = JSON.parse(data);
+
+  // FIX: If the user already manually dismissed this specific status, don't show it again
+  if(p.status === dismissedStatus) return;
+
   const popup = document.getElementById("popup");
   popup.style.display = "flex";
   document.getElementById("closeBtn").style.display = (p.status === "submitted") ? "none" : "block";
@@ -414,8 +419,13 @@ function showPopup() {
 }
 
 window.manualClose = () => { 
+  const data = localStorage.getItem(POPUP_KEY);
+  if (data) {
+    const p = JSON.parse(data);
+    // FIX: Store the specific status that was dismissed
+    localStorage.setItem(DISMISSED_KEY, p.status);
+  }
   document.getElementById("popup").style.display = "none"; 
-  localStorage.setItem(DISMISSED_KEY, "true"); 
 };
 
 (() => {
