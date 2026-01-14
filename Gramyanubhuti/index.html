@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1280, initial-scale=0.3, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=1280, initial-scale=0.3, maximum-scale=0.3, minimum-scale=0.3, user-scalable=no">
 <title>PAIOTORR - Gramyanubhuti</title>
 
 <style>
@@ -16,6 +16,8 @@ html, body {
   font-family: Arial, sans-serif;
   min-width: 1280px; 
   overflow-x: hidden;
+  /* DISABLE DOUBLE-TAP ZOOM */
+  touch-action: manipulation; 
 }
 
 h1 { text-align: center; font-size: 90px; margin-top: 90px; }
@@ -236,7 +238,6 @@ const menuData = [
 const POPUP_KEY=`popup_${table}`, ORDER_KEY=`order_${table}`;
 let order={}, total=0;
 
-// TIMERS: 8 mins for submission, 5 mins for Result
 const TIME_SUBMITTED = 8 * 60 * 1000; 
 const TIME_RESULT = 5 * 60 * 1000;    
 
@@ -369,12 +370,9 @@ function listen(id) {
     if(!s.exists()) return;
     const d = s.data();
     
-    // Check if we've already permanently dismissed this status for this order
     const lockKey = `done_${id}_${d.status}`;
     if(localStorage.getItem(lockKey)) return;
 
-    // IMPORTANT FIX: Only trigger savePopup if the current stored status is DIFFERENT
-    // This prevents the timer from resetting to zero every time Firestore updates.
     const stored = JSON.parse(localStorage.getItem(POPUP_KEY) || "{}");
     if (d.status !== stored.status) {
       if (d.status === "accepted" || d.status === "rejected") {
@@ -392,7 +390,6 @@ function savePopup(status, name, price) {
 function checkPopupTimer() {
   const data = localStorage.getItem(POPUP_KEY);
   if(!data) {
-     // If no data, ensure the window is hidden
      if(document.getElementById("popup").style.display === "flex") {
         document.getElementById("popup").style.display = "none";
      }
@@ -411,7 +408,6 @@ function checkPopupTimer() {
     localStorage.removeItem(POPUP_KEY);
   }
 }
-// Run timer check every second
 setInterval(checkPopupTimer, 1000);
 
 function showPopup() {
