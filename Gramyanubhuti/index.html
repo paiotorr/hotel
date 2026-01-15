@@ -301,6 +301,8 @@ const TIME_RESULT = 5 * 60 * 1000;
 const orderBox = document.getElementById("orderBox");
 const orderList = document.getElementById("orderList");
 const catBar = document.getElementById("catBar");
+let order = {};
+let total = 0;
 
 orderBox.addEventListener('touchmove', (e) => {
     const isScrollable = orderList.contains(e.target) || catBar.contains(e.target);
