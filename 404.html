@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Joi Zubeen Da</title>
+
+  <!-- Security Headers -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="Referrer-Policy" content="no-referrer">
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+  <meta http-equiv="Content-Security-Policy" 
+        content="default-src 'self'; 
+                 img-src 'self' https://paiotorr.com data:; 
+                 style-src 'self' 'unsafe-inline'; 
+                 script-src 'self' 'unsafe-inline'; 
+                 frame-ancestors 'none';">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    * {
+      user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      -moz-user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-user-drag: none;
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: black;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    .container {
+      text-align: center;
+    }
+
+    img {
+      max-width: 90%;
+      max-height: 70vh;
+      border-radius: 15px;
+      box-shadow: 0 0 50px rgba(255,255,255,0.3);
+      pointer-events: none;
+    }
+
+    h1 {
+      margin-top: 20px;
+      font-size: 42px;
+      color: white;
+      letter-spacing: 3px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <img 
+      src="https://paiotorr.com/Joi%20Zubeen%20Da/JoiZubeenDa.jpg" 
+      alt="Joi Zubeen Da">
+    <h1>Joi Zubeen Da</h1>
+  </div>
+
+  <script>
+    // Disable Right Click
+    document.addEventListener('contextmenu', e => e.preventDefault());
+
+    // Disable Text Selection
+    document.addEventListener('selectstart', e => e.preventDefault());
+
+    // Disable Dragging
+    document.addEventListener('dragstart', e => e.preventDefault());
+
+    // Block Key Shortcuts
+    document.onkeydown = function(e) {
+      if (
+        e.keyCode === 123 || // F12
+        (e.ctrlKey && e.shiftKey && e.keyCode === 73) || // Ctrl+Shift+I
+        (e.ctrlKey && e.shiftKey && e.keyCode === 74) || // Ctrl+Shift+J
+        (e.ctrlKey && e.keyCode === 85) || // Ctrl+U
+        (e.ctrlKey && e.keyCode === 83) || // Ctrl+S
+        (e.ctrlKey && e.keyCode === 67) || // Ctrl+C
+        (e.ctrlKey && e.keyCode === 80) || // Ctrl+P
+        (e.ctrlKey && e.keyCode === 65)    // Ctrl+A
+      ) {
+        return false;
+      }
+    };
+
+    // DevTools Detection (Basic)
+    setInterval(function() {
+      const before = new Date().getTime();
+      debugger;
+      const after = new Date().getTime();
+      if (after - before > 100) {
+        document.body.innerHTML = "";
+      }
+    }, 1000);
+
+    // Block iframe embedding
+    if (window.top !== window.self) {
+      window.top.location = window.self.location;
+    }
+  </script>
+
+</body>
+</html>
