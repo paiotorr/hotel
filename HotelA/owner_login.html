@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Owner Login - PAIOTORR</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f2f5f9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+
+  .login-box {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    width: 320px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    text-align: center;
+  }
+
+  h2 {
+    margin-bottom: 20px;
+  }
+
+  input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+  }
+
+  button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 15px;
+    background: #0b6efd;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 15px;
+  }
+
+  button:disabled {
+    background: #999;
+    cursor: not-allowed;
+  }
+
+  .message {
+    margin-top: 12px;
+    font-size: 13px;
+    color: red;
+  }
+</style>
+</head>
+<body>
+
+<div class="login-box">
+  <h2>Owner Login</h2>
+
+  <input id="email" type="email" placeholder="Owner Email" autocomplete="username">
+  <input id="password" type="password" placeholder="Password" autocomplete="current-password">
+
+  <button id="loginBtn" onclick="login()">Login</button>
+
+  <div id="msg" class="message"></div>
+</div>
+
+<script type="module">
+import { auth } from './firebase.js';
+import { signInWithEmailAndPassword } from
+  "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const MAX_ATTEMPTS = 3;
+const LOCK_TIME = 10 * 60 * 1000; // 10 minutes in milliseconds
+
+const emailInput = document.getElementById("email");
+const passInput = document.getElementById("password");
+const msg = document.getElementById("msg");
+const loginBtn = document.getElementById("loginBtn");
+
+function now() {
+  return new Date().getTime();
+}
+
+function getLockData() {
+  return JSON.parse(localStorage.getItem("ownerLoginLock") || "{}");
+}
+
+function setLockData(data) {
+  localStorage.setItem("ownerLoginLock", JSON.stringify(data));
+}
+
+function isLocked() {
+  const data = getLockData();
+  return data.lockUntil && now() < data.lockUntil;
+}
+
+function lockFor10Min() {
+  setLockData({
+    attempts: MAX_ATTEMPTS,
+    lockUntil: now() + LOCK_TIME
+  });
+}
+
+function incrementAttempts() {
+  const data = getLockData();
+  const attempts = (data.attempts || 0) + 1;
+
+  if (attempts >= MAX_ATTEMPTS) {
+    lockFor10Min();
+    return MAX_ATTEMPTS;
+  } else {
+    setLockData({ attempts });
+    return attempts;
+  }
+}
+
+function resetAttempts() {
+  localStorage.removeItem("ownerLoginLock");
+}
+
+function showLockMessage() {
+  const data = getLockData();
+  const remaining = Math.ceil((data.lockUntil - now()) / 60000);
+  msg.innerText = `Too many attempts. Try again in ${remaining} minute(s).`;
+  loginBtn.disabled = true;
+}
+
+function updateLockUI() {
+  if (isLocked()) {
+    showLockMessage();
+    return true;
+  } else {
+    loginBtn.disabled = false;
+    return false;
+  }
+}
+
+// Check lock status on page load
+updateLockUI();
+
+window.login = function () {
+  if (updateLockUI()) return;
+
+  const email = emailInput.value.trim();
+  const pass = passInput.value;
+
+  if (!email || !pass) {
+    msg.innerText = "Please enter email and password.";
+    return;
+  }
+
+  msg.innerText = "Checking login...";
+
+  signInWithEmailAndPassword(auth, email, pass)
+    .then(() => {
+      resetAttempts();
+      window.location.href = "owner.html";
+    })
+    .catch(() => {
+      const tries = incrementAttempts();
+
+      if (tries >= MAX_ATTEMPTS) {
+        showLockMessage();
+      } else {
+        msg.innerText = `Wrong login. Attempts left: ${MAX_ATTEMPTS - tries}`;
+      }
+    });
+};
+
+// Optional: auto-unlock UI when time passes
+setInterval(() => {
+  if (!isLocked()) {
+    loginBtn.disabled = false;
+    msg.innerText = "";
+  }
+}, 5000);
+</script>
+
+</body>
+</html>
