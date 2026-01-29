@@ -165,7 +165,7 @@ window.login = function () {
   signInWithEmailAndPassword(auth, email, pass)
     .then(() => {
       resetAttempts();
-      window.location.href = "owner.html";
+      window.location.replace("/HotelA/owner.html");
     })
     .catch(() => {
       const tries = incrementAttempts();
