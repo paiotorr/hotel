@@ -10,12 +10,34 @@ const LOGIN_URL = "/HotelA/owner_login.html";
 function goLogin(){ window.location.replace(LOGIN_URL); }
 
 onAuthStateChanged(auth, async (user) => {
-  if (!user) return goLogin();
-  const q = query(collection(db,"restaurants"), where("ownerUID","==", user.uid));
-  const snap = await getDocs(q);
-  if (snap.empty) return goLogin();
-  const d = snap.docs[0].data();
-  if (d.status !== "active" || new Date() > d.subscriptionEnd.toDate()) return goLogin();
+  try {
+    if (!user) return goLogin();
+
+    // find restaurants owned by this user
+    const q = query(collection(db, "restaurants"), where("ownerUID", "==", user.uid));
+    const snap = await getDocs(q);
+    if (snap.empty) return goLogin();
+
+    const docSnap = snap.docs[0];
+    const d = docSnap.data();
+
+    // safe subscriptionEnd check (won't throw if missing)
+    const end = d.subscriptionEnd?.toDate?.();
+    if (d.status !== "active") return goLogin();
+    if (!end || new Date() > end) return goLogin();
+
+    // store the restaurant id for use later by the page code
+    try {
+      sessionStorage.setItem("restaurant_session", JSON.stringify({ rid: docSnap.id }));
+      window.RESTAURANT_ID = docSnap.id;
+    } catch(e) { /* ignore session errors */ }
+
+    // allowed — do nothing so page continues to load
+    console.log("Access granted for restaurant:", docSnap.id);
+  } catch (err) {
+    console.error("Guard error:", err);
+    goLogin();
+  }
 });
 </script>
 <meta charset="utf-8"/>
@@ -463,23 +485,6 @@ document.addEventListener('keydown', e=>{
   © 2026 Paiotorr. All Rights Reserved.
 </footer>
 </body>
-<!-- 🔐 OWNER PAGE SECURITY + LOGOUT (PASTE AFTER <body>) -->
-<script type="module">
-import { auth, db } from '/firebase.js';
-import { onAuthStateChanged } from
-  "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-import { collection, query, where, getDocs } from
-  "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-import { signOut } from
-  "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-// Redirect helper
-function redirect(msg) {
-  alert(msg);
-  window.location.href = "owner_login.html";
-}
 
  // GLOBAL RESTAURANT ID FOR YOUR ORDER CODE
     window.RESTAURANT_ID = doc.id;
