@@ -70,7 +70,7 @@
   <input id="email" type="email" placeholder="Owner Email" autocomplete="username">
   <input id="password" type="password" placeholder="Password" autocomplete="current-password">
 
-  <button id="loginBtn" onclick="login()">Login</button>
+  <button id="loginBtn">Login</button>
 
   <div id="msg" class="message"></div>
 </div>
@@ -185,6 +185,8 @@ setInterval(() => {
     msg.innerText = "";
   }
 }, 5000);
+  
+  loginBtn.addEventListener("click", login);
 </script>
 
 </body>
